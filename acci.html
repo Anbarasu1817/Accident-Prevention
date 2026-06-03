@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SafeDrive AI Guardian: Complete Accident Prevention System</title>
+
+    <!-- Three.js build + OrbitControls (matching versions) -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        :root {
+            --bg: #0a0f1c;
+            --panel: rgba(0, 201, 255, 0.08);
+            --accent: #00c9ff;
+            --danger: #ff3b30;
+            --caution: #ff9500;
+            --safe: #30d158;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            background: linear-gradient(180deg, #071021 0%, #0a0f1c 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #e8f8ff;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--panel);
+            padding: 18px;
+            overflow-y: auto;
+            border-right: 1px solid rgba(0, 201, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 201, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 18px;
+            gap: 18px;
+        }
+
+        .simulation-area {
+            flex: 1;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(2, 6, 23, 0.8);
+            border: 1px solid rgba(0, 201, 255, 0.1);
+            background: #0a0f1c;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            height: 300px;
+        }
+
+        .dashboard-panel {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 8px 32px rgba(0, 201, 255, 0.1);
+            border: 1px solid rgba(0, 201, 255, 0.15);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        h1, h2, h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+
+        h3 {
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent), #0072ff);
+            border: none;
+            color: #021024;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 201, 255, 0.3);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            color: #cfe9ff;
+            border: 1px solid rgba(0, 201, 255, 0.3);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            color: white;
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 8px;
+            font-size: 14px;
+            color: #b6d9ff;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+
+        /* Enhanced HUD */
+        .hud {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            z-index: 10;
+            color: #e8f8ff;
+            background: rgba(10, 15, 28, 0.85);
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(0, 201, 255, 0.2);
+            backdrop-filter: blur(10px);
+            min-width: 280px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .hud .row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .hud .label {
+            min-width: 80px;
+            font-size: 14px;
+            color: #9cc8ff;
+        }
+
+        .hud .value {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            font-weight: 700;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .safe {
+            background: rgba(48, 209, 88, 0.2);
+            color: var(--safe);
+            border: 1px solid rgba(48, 209, 88, 0.3);
+        }
+
+        .caution {
+            background: rgba(255, 149, 0, 0.2);
+            color: var(--caution);
+            border: 1px solid rgba(255, 149, 0, 0.3);
+        }
+
+        .danger {
+            background: rgba(255, 59, 48, 0.2);
+            color: var(--danger);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+        }
+
+        /* LIDAR Radar */
+        .radar {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 120px;
+            height: 60px;
+            background: rgba(10, 15, 28, 0.85);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 201, 255, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .radar-sweep {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(
+                from 0deg at 50% 100%,
+                transparent 0%,
+                rgba(0, 201, 255, 0.1) 10%,
+                rgba(0, 201, 255, 0.3) 20%,
+                transparent 30%
+            );
+            animation: sweep 2s infinite linear;
+        }
+
+        .radar-object {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .radar-object.safe {
+            background: var(--safe);
+        }
+
+        .radar-object.caution {
+            background: var(--caution);
+        }
+
+        .radar-object.danger {
+            background: var(--danger);
+        }
+
+        @keyframes sweep {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* G-Force Monitor */
+        .g-force {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 120px;
+            height: 40px;
+            background: rgba(10, 15, 28, 0.85);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 201, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px;
+        }
+
+        .g-force-bar {
+            height: 8px;
+            background: linear-gradient(90deg, var(--safe), var(--caution), var(--danger));
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .g-force-indicator {
+            height: 100%;
+            width: 30%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        /* Safety Score */
+        .safety-score {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            background: rgba(10, 15, 28, 0.85);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 201, 255, 0.2);
+            backdrop-filter: blur(10px);
+            min-width: 180px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: #9cc8ff;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .mini-log {
+            margin-top: 10px;
+            max-height: 120px;
+            overflow: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 11px;
+            color: #bfefff;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .footer-note {
+            font-size: 12px;
+            color: #9cc8ff;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        /* AI Voice Messages */
+        .ai-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 15, 28, 0.9);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px solid var(--accent);
+            color: #e8f8ff;
+            font-weight: 600;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 201, 255, 0.3);
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Documentation Styles */
+        .doc-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 201, 255, 0.2);
+        }
+
+        .doc-section:last-child {
+            border-bottom: none;
+        }
+
+        .doc-section p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .doc-section ul, .doc-section ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .doc-section li {
+            margin-bottom: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid rgba(0, 201, 255, 0.3);
+        }
+
+        th {
+            background: rgba(0, 201, 255, 0.1);
+            color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        /* 3D Car Drive Styles */
+        #carGameContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f0;
+            display: none;
+        }
+
+        #city {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 30%;
+            width: 100%;
+            z-index: -1;
+            display: block;
+        }
+
+        #carCanvas {
+            background: transparent;
+            z-index: 100;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .car-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .car-btn {
+            padding: 15px 25px;
+            background: rgba(0, 201, 255, 0.8);
+            border: none;
+            border-radius: 50%;
+            color: #021024;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .car-score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(10, 15, 28, 0.85);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 201, 255, 0.2);
+            backdrop-filter: blur(10px);
+            font-weight: 700;
+            z-index: 1000;
+            color: #e8f8ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>SafeDrive AI Guardian</h1>
+
+            <div class="controls">
+                <button class="btn" id="startBtn">Start Simulation</button>
+                <button class="btn secondary" id="pauseBtn">Pause</button>
+                <button class="btn secondary" id="resetBtn">Reset</button>
+            </div>
+
+            <label>AI Traffic Density: <span id="aiDensityVal">6</span></label>
+            <input id="aiDensity" type="range" min="1" max="18" value="6">
+
+            <label>Camera View:</label>
+            <div class="controls">
+                <button class="btn secondary" id="camFollowBtn">Follow</button>
+                <button class="btn secondary" id="camOrbitBtn">Orbit</button>
+                <button class="btn danger" id="emergencyBtn">Emergency Test</button>
+            </div>
+
+            <label>Simulation Mode:</label>
+            <div class="controls">
+                <button class="btn secondary" id="mode3DBtn">3D Car Drive</button>
+                <button class="btn" id="modeGuardianBtn">AI Guardian</button>
+            </div>
+
+            <label>System Status</label>
+            <div style="font-size:13px;color:#cfe9ff">
+                <p><strong>Mission:</strong> Test the AI Guardian safety system. Drive with <strong>W/A/S/D</strong> or
+                    <strong>↑/↓/←/→</strong>.</p>
+                <p>Follow AI recommendations to maintain high safety score. V2V alerts will warn of hazards ahead.</p>
+            </div>
+
+            <div style="margin-top:15px">
+                <label>Graphics Quality</label>
+                <select id="qualitySelect"
+                    style="width:100%;padding:8px;border-radius:8px;background:rgba(0,0,0,0.3);color:#e8f8ff;border:1px solid rgba(0,201,255,0.3)">
+                    <option value="high">High (Shadows)</option>
+                    <option value="low">Low (Performance)</option>
+                </select>
+            </div>
+
+            <div style="margin-top:15px">
+                <label>System Log</label>
+                <div class="mini-log" id="miniLog"></div>
+            </div>
+
+            <div class="footer-note">Status: <span id="mainStatus">System Ready</span></div>
+        </div>
+
+        <div class="content">
+            <div class="simulation-area" id="simulationArea">
+                <!-- Enhanced AI Guardian HUD -->
+                <div class="hud" id="hud">
+                    <div class="row">
+                        <div class="label">Speed:</div>
+                        <div class="value" id="hudSpeed">0 km/h</div>
+                        <div class="label" style="margin-left:15px">Safe Speed:</div>
+                        <div class="value" id="hudSafeSpeed">60 km/h</div>
+                    </div>
+                    <div class="row">
+                        <div class="label">TTC:</div>
+                        <div class="value" id="hudTTC">--</div>
+                        <div class="label" style="margin-left:15px">Safety:</div>
+                        <div id="hudSafety" class="status safe">SAFE</div>
+                    </div>
+                    <div class="row">
+                        <div class="label">V2V Alerts:</div>
+                        <div class="value" id="hudV2V">0 Active</div>
+                    </div>
+                </div>
+
+                <!-- LIDAR Radar Display -->
+                <div class="radar">
+                    <div class="radar-sweep"></div>
+                    <div id="radarObjects"></div>
+                </div>
+
+                <!-- G-Force Monitor -->
+                <div class="g-force">
+                    <div style="font-size:11px;color:#9cc8ff">G-FORCE MONITOR</div>
+                    <div class="g-force-bar">
+                        <div class="g-force-indicator" id="gForceIndicator"></div>
+                    </div>
+                </div>
+
+                <!-- Safety Score Display -->
+                <div class="safety-score">
+                    <div class="score-value" id="safetyScore">100%</div>
+                    <div class="score-label">SAFETY SCORE</div>
+                </div>
+
+                <!-- AI Voice Message Display -->
+                <div class="ai-message" id="aiMessage"></div>
+
+                <!-- Three.js Container -->
+                <div id="threeContainer" style="width:100%;height:100%"></div>
+
+                <!-- 3D Car Drive Container -->
+                <div id="carGameContainer">
+                    <img id="city" src="https://image.ibb.co/jCGU0y/cty.jpg">
+                    <canvas id="carCanvas"></canvas>
+                    <div class="car-score">
+                        Score: <span id="carScore">0</span>
+                    </div>
+                    <div class="car-controls">
+                        <button class="car-btn" id="carLeftBtn">←</button>
+                        <button class="car-btn" id="carRightBtn">→</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard">
+                <div class="dashboard-panel">
+                    <h2>Accident Prediction & Prevention System</h2>
+                    <div class="doc-section">
+                        <h3>Abstract</h3>
+                        <p>Aims to predict and prevent road accidents using AI, IoT, and real-time data processing. The
+                            system monitors vehicle speeds, detects nearby obstacles, and provides speed recommendations
+                            to avoid collisions. In unavoidable cases, it sends emergency alerts to nearby vehicles and
+                            medical services.</p>
+                    </div>
+                    <div class="doc-section">
+                        <h3>System Architecture</h3>
+                        <p>The system consists of three main components:</p>
+                        <ol>
+                            <li><strong>Vehicle Monitoring System</strong> - Collects GPS, speed, and acceleration data.
+                            </li>
+                            <li><strong>AI-Based Accident Prediction Model</strong> - Uses machine learning to analyze
+                                accident risks.</li>
+                            <li><strong>Emergency Alert & V2V Communication</strong> - Sends alerts to nearby vehicles
+                                and emergency services.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="dashboard-panel">
+                    <h2>Hardware & Implementation</h2>
+                    <div class="doc-section">
+                        <h3>Hardware Components</h3>
+                        <table>
+                            <tr>
+                                <th>Component</th>
+                                <th>Purpose</th>
+                                <th>Cost (INR)</th>
+                            </tr>
+                            <tr>
+                                <td>Raspberry Pi 4</td>
+                                <td>Edge computing for AI processing</td>
+                                <td>₹4150</td>
+                            </tr>
+                            <tr>
+                                <td>GPS Module (NEO-6M)</td>
+                                <td>Vehicle location tracking</td>
+                                <td>₹1660</td>
+                            </tr>
+                            <tr>
+                                <td>LIDAR Sensor</td>
+                                <td>Object detection</td>
+                                <td>₹8300</td>
+                            </tr>
+                            <tr>
+                                <td>IMU Sensor (MPU6050)</td>
+                                <td>Monitoring acceleration & rotation</td>
+                                <td>₹1245</td>
+                            </tr>
+                            <tr>
+                                <td>4G/5G Module</td>
+                                <td>Internet connectivity</td>
+                                <td>₹3320</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Cost</strong></td>
+                                <td></td>
+                                <td><strong>₹26560</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="doc-section">
+                        <h3>Implementation Steps</h3>
+                        <ol>
+                            <li>GPS & Speed Sensor Integration</li>
+                            <li>AI-Based Collision Prediction</li>
+                            <li>V2V Communication using MQTT</li>
+                            <li>Emergency Alert System</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden images for 3D Car Drive -->
+    <img class="aImg" id="t1" src="https://image.ibb.co/dZi5Ly/t1.png" style="display:none;">
+    <img class="aImg" id="t2" src="https://image.ibb.co/jajjDJ/t2.png" style="display:none;">
+    <img class="aImg" id="t3" src="https://image.ibb.co/it4jDJ/t5.png" style="display:none;">
+    <img class="aImg" id="t4" src="https://image.ibb.co/ksy0nd/t4.png" style="display:none;">
+    <img class="aImg" id="c1" src="https://image.ibb.co/f4v7YJ/c2.png" style="display:none;">
+    <img class="aImg" id="cn" src="https://image.ibb.co/jRAp0y/coin.png" style="display:none;">
+
+    <script>
+        /* ===========================
+           SafeDrive Simulator: AI Guardian
+           Enhanced with AI Guardian HUD, Safety Scoring, V2V Communication
+           =========================== */
+
+        let scene, camera, renderer, orbitControls;
+        let player, aiCars = [], road, clock;
+        let isRunning = false, isPaused = false;
+        let followCamera = true;
+        let currentMode = 'guardian'; // 'guardian' or '3d'
+        let hudSpeed = document.getElementById('hudSpeed');
+        let hudTTC = document.getElementById('hudTTC');
+        let hudSafety = document.getElementById('hudSafety');
+        let hudSafeSpeed = document.getElementById('hudSafeSpeed');
+        let hudV2V = document.getElementById('hudV2V');
+        let miniLog = document.getElementById('miniLog');
+        let mainStatus = document.getElementById('mainStatus');
+        let safetyScoreEl = document.getElementById('safetyScore');
+        let aiMessage = document.getElementById('aiMessage');
+        let gForceIndicator = document.getElementById('gForceIndicator');
+        let radarObjects = document.getElementById('radarObjects');
+        let threeContainer = document.getElementById('threeContainer');
+        let carGameContainer = document.getElementById('carGameContainer');
+
+        // Performance optimization
+        let lastUpdateTime = 0;
+        const UPDATE_INTERVAL = 1000 / 60; // 60 FPS target
+        const lanesX = [-6, -2, 2, 6];
+        const world = { length: 1000 };
+
+        // Game state
+        const gameState = {
+            safetyScore: 100,
+            activeV2VAlerts: 0,
+            lastAiWarning: 0,
+            gForce: 0,
+            harshManeuvers: 0,
+            collisionsPrevented: 0,
+            safeSpeed: 60 // km/h
+        };
+
+        // WebAudio for warnings
+        let audioCtx;
+
+        function initAudio() {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.warn("Audio context not supported:", e);
+            }
+        }
+
+        function beep(freq = 800, duration = 0.12, type = 'sine', volume = 0.1) {
+            if (!isRunning || !audioCtx) return;
+            try {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                g.gain.value = 0.0001;
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+                g.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+                o.start(now);
+                g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+                o.stop(now + duration + 0.02);
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+
+        function crashSound() {
+            beep(120, 0.35, 'sawtooth', 0.2);
+            beep(90, 0.5, 'square', 0.15);
+        }
+
+        function aiVoiceMessage(message, priority = "normal") {
+            aiMessage.textContent = message;
+            aiMessage.style.opacity = 1;
+            aiMessage.style.color = priority === "danger" ? "#ff3b30" :
+                priority === "caution" ? "#ff9500" : "#00c9ff";
+
+            // Speak the message if browser supports speech synthesis
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(message);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 0.8;
+                window.speechSynthesis.speak(utterance);
+            }
+
+            setTimeout(() => {
+                aiMessage.style.opacity = 0;
+            }, 4000);
+        }
+
+        /* ---------- init scene ---------- */
+        function initGuardian() {
+            const container = document.getElementById('threeContainer');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0f1c);
+            scene.fog = new THREE.Fog(0x0a0f1c, 100, 400);
+
+            clock = new THREE.Clock();
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 2000);
+            camera.position.set(0, 8, 18);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Orbit controls
+            orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+            orbitControls.enabled = false;
+            orbitControls.target.set(0, 1, 0);
+
+            // Enhanced lighting
+            const hemi = new THREE.HemisphereLight(0xffffff, 0x444466, 0.8);
+            scene.add(hemi);
+
+            const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+            dir.position.set(10, 30, 10);
+            dir.castShadow = true;
+            dir.shadow.camera.near = 1;
+            dir.shadow.camera.far = 200;
+            dir.shadow.camera.right = 40;
+            dir.shadow.camera.left = -40;
+            dir.shadow.camera.top = 40;
+            dir.shadow.camera.bottom = -40;
+            dir.shadow.mapSize.width = 2048;
+            dir.shadow.mapSize.height = 2048;
+            scene.add(dir);
+
+            // Road
+            const roadGeo = new THREE.PlaneGeometry(40, world.length);
+            const roadMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.z = -world.length / 2 + 50;
+            road.receiveShadow = true;
+            scene.add(road);
+
+            // Road markings
+            const stripeGeo = new THREE.PlaneGeometry(1.2, 20);
+            const stripeMat = new THREE.MeshStandardMaterial({
+                color: 0xf8fafc,
+                emissive: 0x334155,
+                emissiveIntensity: 0.2
+            });
+            for (let z = -world.length / 2; z < world.length / 2; z += 22) {
+                const s = new THREE.Mesh(stripeGeo, stripeMat);
+                s.rotation.x = -Math.PI / 2;
+                s.position.set(0, 0.01, z);
+                scene.add(s);
+            }
+
+            // Environment
+            createEnvironment();
+
+            // Player car
+            player = createCar(0x00c9ff, true);
+            player.position.set(0, 0.5, 30);
+            player.userData = {
+                speed: 0,
+                maxSpeed: 1.8,
+                accel: 0.06,
+                brake: 0.12,
+                steering: 0,
+                lane: 2,
+                width: 2.0,
+                lastX: 0,
+                lastZ: 30,
+                lastSpeed: 0
+            };
+            scene.add(player);
+
+            // Create AI cars
+            spawnAICars(parseInt(document.getElementById('aiDensity').value, 10));
+
+            // Initial HUD
+            updateHUD(0, null, 'SAFE');
+            updateSafetyScore();
+        }
+
+        function createEnvironment() {
+            // Grass
+            const grassGeo = new THREE.PlaneGeometry(200, world.length);
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x14532d });
+            const grassLeft = new THREE.Mesh(grassGeo, grassMat);
+            grassLeft.rotation.x = -Math.PI / 2;
+            grassLeft.position.set(-40, -0.09, -world.length / 2 + 50);
+            scene.add(grassLeft);
+            const grassRight = grassLeft.clone();
+            grassRight.position.set(40, -0.09, -world.length / 2 + 50);
+            scene.add(grassRight);
+
+            // Buildings and scenery
+            const buildingColors = [0x475569, 0x334155, 0x1e293b];
+            for (let i = -8; i <= 8; i += 4) {
+                if (i === 0) continue;
+                const height = 10 + Math.random() * 20;
+                const b = new THREE.Mesh(
+                    new THREE.BoxGeometry(6, height, 8),
+                    new THREE.MeshStandardMaterial({
+                        color: buildingColors[Math.floor(Math.random() * buildingColors.length)],
+                        roughness: 0.7
+                    })
+                );
+                b.position.set(i * 8, height / 2, -180);
+                b.castShadow = true;
+                b.receiveShadow = true;
+                scene.add(b);
+            }
+        }
+
+        function createCar(color = 0xff0000, isPlayer = false) {
+            const group = new THREE.Group();
+
+            // Car body
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(2, 0.6, 4),
+                new THREE.MeshStandardMaterial({
+                    color,
+                    metalness: isPlayer ? 0.8 : 0.3,
+                    roughness: isPlayer ? 0.2 : 0.6
+                })
+            );
+            body.castShadow = true;
+            body.receiveShadow = true;
+            body.position.y = 0.3;
+            group.add(body);
+
+            // Windows
+            const windowMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                transparent: true,
+                opacity: 0.7
+            });
+            const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.2), windowMat);
+            windshield.position.set(0, 0.6, 0.8);
+            windshield.rotation.x = Math.PI / 2;
+            group.add(windshield);
+
+            // Wheels
+            const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.4, 12);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+            for (let i = 0; i < 4; i++) {
+                const w = new THREE.Mesh(wheelGeo, wheelMat);
+                w.rotation.z = Math.PI / 2;
+                w.position.y = 0.1;
+                w.position.x = (i < 2 ? -0.9 : 0.9);
+                w.position.z = (i % 2 === 0 ? 1.25 : -1.25);
+                group.add(w);
+            }
+
+            // AI Guardian indicator (for player car)
+            if (isPlayer) {
+                const indicator = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.3, 8, 6),
+                    new THREE.MeshBasicMaterial({
+                        color: 0x00c9ff,
+                        emissive: 0x00c9ff,
+                        emissiveIntensity: 0.5
+                    })
+                );
+                indicator.position.set(0, 1.2, 0);
+                group.add(indicator);
+            }
+
+            return group;
+        }
+
+        function spawnAICars(count) {
+            // Properly dispose of old AI cars to prevent memory leaks
+            aiCars.forEach(c => {
+                scene.remove(c.mesh);
+                // Dispose of geometries and materials
+                c.mesh.traverse(child => {
+                    if (child.isMesh) {
+                        if (child.geometry) child.geometry.dispose();
+                        if (child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(material => material.dispose());
+                            } else {
+                                child.material.dispose();
+                            }
+                        }
+                    }
+                });
+            });
+
+            aiCars = [];
+
+            for (let i = 0; i < count; i++) {
+                const laneIndex = Math.floor(Math.random() * lanesX.length);
+                const x = lanesX[laneIndex];
+                const z = -(Math.random() * 500) - 10 - (i * 20);
+                const mesh = createCar(0xef4444);
+                mesh.position.set(x, 0.5, z);
+                mesh.userData = {
+                    speed: 0.5 + Math.random() * 0.9,
+                    lane: laneIndex,
+                    targetLane: laneIndex,
+                    changeTimer: Math.random() * 3 + 1,
+                    width: 2.0,
+                    v2vEnabled: true
+                };
+                scene.add(mesh);
+                aiCars.push({ mesh });
+            }
+            log(`Spawned ${count} AI vehicles with V2V communication`);
+        }
+
+        let keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            // Prevent arrow key scrolling
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+            }
+        });
+        document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+
+            if (currentMode === 'guardian') {
+                // Performance optimization: only update at target frame rate
+                const now = performance.now();
+                if (!isRunning || isPaused || now - lastUpdateTime < UPDATE_INTERVAL) {
+                    renderer.render(scene, camera);
+                    return;
+                }
+                lastUpdateTime = now;
+
+                const dt = Math.min(clock.getDelta(), 0.05);
+                handlePlayerControls(dt);
+                updateAICars(dt);
+
+                const ttcInfo = collisionPrediction();
+                updateHUD(player.userData.speed, ttcInfo.time, ttcInfo.safety);
+                updateRadarDisplay();
+                updateGForceMonitor(dt);
+                updateSafetySystem();
+
+                // Camera
+                if (followCamera) {
+                    const desiredPos = new THREE.Vector3(
+                        player.position.x * 0.1,
+                        player.position.y + 6.5,
+                        player.position.z + 14
+                    );
+                    camera.position.lerp(desiredPos, 0.12);
+                    const target = new THREE.Vector3(player.position.x, player.position.y + 1.2, player.position.z);
+                    camera.lookAt(target);
+                } else {
+                    orbitControls.update();
+                }
+
+                renderer.render(scene, camera);
+            } else if (currentMode === '3d') {
+                // 3D Car Drive animation is handled separately
+            }
+        }
+
+        function handlePlayerControls(dt) {
+            const u = player.userData;
+
+            // Store previous state for G-force calculation
+            u.lastX = player.position.x;
+            u.lastZ = player.position.z;
+            u.lastSpeed = u.speed;
+
+            // Acceleration
+            if (keys['w'] || keys['arrowup']) {
+                u.speed = Math.min(u.maxSpeed, u.speed + u.accel);
+            } else if (keys['s'] || keys['arrowdown']) {
+                u.speed = Math.max(-u.maxSpeed * 0.4, u.speed - u.brake);
+            } else {
+                u.speed *= 0.995;
+                if (Math.abs(u.speed) < 0.001) u.speed = 0;
+            }
+
+            // Lane changing
+            if ((keys['a'] || keys['arrowleft']) && u.lane > 0 && !u.laneChanging) {
+                u.targetLane = Math.max(0, u.lane - 1);
+                u.laneChanging = true;
+            }
+            if ((keys['d'] || keys['arrowright']) && u.lane < lanesX.length - 1 && !u.laneChanging) {
+                u.targetLane = Math.min(lanesX.length - 1, u.lane + 1);
+                u.laneChanging = true;
+            }
+
+            // Lane interpolation
+            if (u.laneChanging) {
+                const targetX = lanesX[u.targetLane];
+                const diff = targetX - player.position.x;
+                player.position.x += diff * 0.18;
+                if (Math.abs(diff) < 0.05) {
+                    player.position.x = targetX;
+                    u.lane = u.targetLane;
+                    u.laneChanging = false;
+                }
+            }
+
+            // Movement
+            player.position.z -= u.speed * (60 * dt);
+            player.position.x = Math.max(lanesX[0], Math.min(lanesX[lanesX.length - 1], player.position.x));
+        }
+
+        function updateAICars(dt) {
+            aiCars.forEach((c, idx) => {
+                const mesh = c.mesh;
+                const ud = mesh.userData;
+
+                // Lane changing logic
+                ud.changeTimer -= dt;
+                if (ud.changeTimer <= 0) {
+                    ud.changeTimer = 2.0 + Math.random() * 4.0;
+                    if (Math.random() < 0.3) {
+                        let dir = (Math.random() < 0.5) ? -1 : 1;
+                        let newLane = ud.lane + dir;
+                        if (newLane < 0 || newLane >= lanesX.length) newLane = ud.lane - dir;
+                        if (newLane >= 0 && newLane < lanesX.length) ud.targetLane = newLane;
+                    }
+                }
+
+                // Lane interpolation
+                const targetX = lanesX[ud.targetLane];
+                const dx = targetX - mesh.position.x;
+                mesh.position.x += dx * 0.06;
+                if (Math.abs(dx) < 0.05) {
+                    mesh.position.x = targetX;
+                    ud.lane = ud.targetLane;
+                }
+
+                // V2V awareness and collision avoidance
+                const safeGap = 8 + ud.speed * 8;
+                let aheadVehicle = null;
+                let aheadDist = Infinity;
+
+                // Check player
+                if (Math.abs(mesh.position.x - player.position.x) < 1.6) {
+                    const dz = player.position.z - mesh.position.z;
+                    if (dz < 0) {
+                        if (Math.abs(dz) < aheadDist) {
+                            aheadDist = Math.abs(dz);
+                            aheadVehicle = player;
+                        }
+                    }
+                }
+
+                // Check other AI cars
+                aiCars.forEach((o) => {
+                    if (o.mesh === mesh) return;
+                    if (Math.abs(o.mesh.position.x - mesh.position.x) < 1.6) {
+                        const dz = o.mesh.position.z - mesh.position.z;
+                        if (dz < 0 && Math.abs(dz) < aheadDist) {
+                            aheadDist = Math.abs(dz);
+                            aheadVehicle = o.mesh;
+                        }
+                    }
+                });
+
+                // Adjust speed based on V2V awareness
+                if (aheadVehicle) {
+                    if (aheadDist < safeGap) {
+                        ud.speed = Math.max(0.12, ud.speed - 0.6 * dt);
+                        // V2V emergency broadcast if very close
+                        if (aheadDist < safeGap * 0.3 && ud.v2vEnabled) {
+                            broadcastV2V("Emergency braking ahead");
+                        }
+                    } else {
+                        ud.speed = Math.min(1.6, ud.speed + 0.5 * dt);
+                    }
+                } else {
+                    ud.speed = Math.max(0.4, ud.speed + (Math.random() * 0.2 - 0.05) * dt);
+                }
+
+                // Movement
+                mesh.position.z += ud.speed * (60 * dt);
+
+                // Reset if off screen
+                if (mesh.position.z > 120) {
+                    mesh.position.z = -(Math.random() * 400) - 60;
+                    mesh.position.x = lanesX[Math.floor(Math.random() * lanesX.length)];
+                    ud.lane = lanesX.indexOf(mesh.position.x);
+                    ud.targetLane = ud.lane;
+                    ud.speed = 0.6 + Math.random() * 1.0;
+                }
+            });
+        }
+
+        function collisionPrediction() {
+            const pPos = player.position.clone();
+            const pVel = new THREE.Vector3(0, 0, -player.userData.speed * 60);
+            let nearestT = Infinity;
+            let nearestObject = null;
+
+            // Performance optimization: only check nearby vehicles
+            const nearbyVehicles = aiCars.filter(({ mesh }) => {
+                return mesh.position.distanceTo(pPos) < 50;
+            });
+
+            nearbyVehicles.forEach(({ mesh }) => {
+                const r = mesh.position.clone().sub(pPos);
+                if (r.z > 30) return;
+
+                const vRel = mesh.userData ? new THREE.Vector3(0, 0, mesh.userData.speed * 60) : new THREE.Vector3(0, 0, 0);
+                const relVel = vRel.clone().sub(pVel);
+                const vDot = relVel.dot(relVel);
+                if (vDot < 0.0001) return;
+
+                const t = -r.dot(relVel) / vDot;
+
+                if (t > 0 && t < 20) {
+                    const posAtT = r.clone().add(relVel.clone().multiplyScalar(t));
+                    if (Math.abs(posAtT.x) < 2.0 && Math.abs(posAtT.z) < 6.0) {
+                        if (t < nearestT) {
+                            nearestT = t;
+                            nearestObject = mesh;
+                        }
+                    }
+                }
+            });
+
+            let safety = 'SAFE';
+            if (nearestT === Infinity) {
+                hudTTC.textContent = '--';
+                return { time: null, safety };
+            }
+
+            const tSecs = nearestT;
+            hudTTC.textContent = tSecs.toFixed(2) + 's';
+
+            if (tSecs < 1.2) safety = 'DANGER';
+            else if (tSecs < 3.5) safety = 'CAUTION';
+            else safety = 'SAFE';
+
+            // AI Guardian warnings
+            const now = Date.now();
+            if (safety === 'CAUTION' && now - gameState.lastAiWarning > 3000) {
+                aiVoiceMessage("Caution: Vehicle approaching. Maintain safe distance.", "caution");
+                beep(880, 0.08);
+                gameState.lastAiWarning = now;
+            } else if (safety === 'DANGER' && now - gameState.lastAiWarning > 1500) {
+                aiVoiceMessage("Danger! Collision imminent. Brake immediately!", "danger");
+                beep(420, 0.12, 'square');
+                gameState.lastAiWarning = now;
+
+                // Auto-brake
+                player.userData.speed *= 0.6;
+                gameState.collisionsPrevented++;
+                log("Auto-brake engaged - collision prevented");
+
+                if (tSecs < 0.8) {
+                    broadcastV2V();
+                    if (checkRealCollision()) {
+                        triggerCrash();
+                    }
+                }
+            }
+
+            return { time: tSecs, safety };
+        }
+
+        function updateRadarDisplay() {
+            // Clear previous radar objects
+            radarObjects.innerHTML = '';
+
+            // Add radar objects for nearby vehicles
+            aiCars.forEach(({ mesh }) => {
+                const distance = mesh.position.distanceTo(player.position);
+                if (distance < 50) {
+                    const angle = Math.atan2(
+                        mesh.position.x - player.position.x,
+                        mesh.position.z - player.position.z
+                    );
+
+                    // Convert to radar coordinates (0-100%)
+                    const radarX = 50 + (Math.sin(angle) * (distance / 50) * 40);
+                    const radarY = 90 - (Math.cos(angle) * (distance / 50) * 40);
+
+                    if (radarX >= 0 && radarX <= 100 && radarY >= 40 && radarY <= 100) {
+                        const obj = document.createElement('div');
+                        obj.className = 'radar-object';
+
+                        // Color code by distance
+                        if (distance < 15) obj.className += ' danger';
+                        else if (distance < 30) obj.className += ' caution';
+                        else obj.className += ' safe';
+
+                        obj.style.left = radarX + '%';
+                        obj.style.top = radarY + '%';
+                        radarObjects.appendChild(obj);
+                    }
+                }
+            });
+        }
+
+        function updateGForceMonitor(dt) {
+            const u = player.userData;
+
+            // Calculate acceleration (change in velocity)
+            const deltaV = Math.sqrt(
+                Math.pow(player.position.x - u.lastX, 2) +
+                Math.pow(player.position.z - u.lastZ, 2)
+            ) / dt;
+
+            const acceleration = Math.abs(u.speed - u.lastSpeed) / dt;
+            const totalG = (deltaV + acceleration) * 0.1;
+
+            gameState.gForce = totalG;
+
+            // Update indicator position
+            const gForcePercent = Math.min(100, totalG * 50);
+            gForceIndicator.style.width = gForcePercent + '%';
+
+            // Color indicator based on G-force
+            if (totalG > 2) {
+                gForceIndicator.style.background = '#ff3b30';
+                if (totalG > 2.5) {
+                    gameState.harshManeuvers++;
+                    updateSafetyScore(-2);
+                }
+            } else if (totalG > 1) {
+                gForceIndicator.style.background = '#ff9500';
+            } else {
+                gForceIndicator.style.background = '#30d158';
+            }
+        }
+
+        function updateSafetySystem() {
+            const kmh = Math.round(Math.abs(player.userData.speed) * 60 * 3.6);
+
+            // Adjust safe speed based on conditions
+            gameState.safeSpeed = 60; // Base safe speed
+
+            // Reduce safe speed in high traffic
+            if (aiCars.length > 12) {
+                gameState.safeSpeed = 50;
+            }
+
+            // Update HUD
+            hudSafeSpeed.textContent = gameState.safeSpeed + ' km/h';
+
+            // Penalize speeding
+            if (kmh > gameState.safeSpeed + 10) {
+                updateSafetyScore(-0.1);
+            } else if (kmh <= gameState.safeSpeed) {
+                updateSafetyScore(0.05); // Reward safe driving
+            }
+
+            // Gradually increase score for consistent safe driving
+            if (gameState.safetyScore < 100 && kmh <= gameState.safeSpeed) {
+                updateSafetyScore(0.02);
+            }
+        }
+
+        function updateSafetyScore(change = 0) {
+            gameState.safetyScore = Math.max(0, Math.min(100, gameState.safetyScore + change));
+            safetyScoreEl.textContent = Math.round(gameState.safetyScore) + '%';
+
+            // Color coding
+            if (gameState.safetyScore >= 80) {
+                safetyScoreEl.style.color = '#30d158';
+            } else if (gameState.safetyScore >= 60) {
+                safetyScoreEl.style.color = '#ff9500';
+            } else {
+                safetyScoreEl.style.color = '#ff3b30';
+            }
+        }
+
+        function checkRealCollision() {
+            const pBox = new THREE.Box3().setFromObject(player);
+            for (let { mesh } of aiCars) {
+                const b = new THREE.Box3().setFromObject(mesh);
+                if (pBox.intersectsBox(b)) return true;
+            }
+            return false;
+        }
+
+        function broadcastV2V(message = "Emergency: Collision detected ahead") {
+            gameState.activeV2VAlerts++;
+            hudV2V.textContent = gameState.activeV2VAlerts + ' Active';
+
+            log('V2V: ' + message);
+
+            // Nearby AI cars slow down
+            aiCars.forEach(({ mesh }) => {
+                const d = mesh.position.distanceTo(player.position);
+                if (d < 80) {
+                    mesh.userData.speed = Math.max(0.08, mesh.userData.speed * 0.45);
+                }
+            });
+
+            // Clear alert after 5 seconds
+            setTimeout(() => {
+                gameState.activeV2VAlerts = Math.max(0, gameState.activeV2VAlerts - 1);
+                hudV2V.textContent = gameState.activeV2VAlerts + ' Active';
+            }, 5000);
+        }
+
+        function triggerCrash() {
+            isRunning = false;
+            crashSound();
+            aiVoiceMessage("Collision detected! Emergency services notified.", "danger");
+            log('💥 COLLISION — Safety score penalized');
+            updateSafetyScore(-20);
+            mainStatus.textContent = 'Collision occurred';
+            hudSafety.textContent = 'CRASH';
+            hudSafety.className = 'status danger';
+        }
+
+        function updateHUD(speed, ttc, safety) {
+            const kmh = Math.round(Math.abs(speed) * 60 * 3.6);
+            hudSpeed.textContent = kmh + ' km/h';
+
+            if (ttc === null) {
+                hudTTC.textContent = '--';
+            } else {
+                hudTTC.textContent = ttc.toFixed(2) + 's';
+            }
+
+            hudSafety.textContent = safety;
+            hudSafety.className = 'status ' + safety.toLowerCase();
+        }
+
+        /* ===========================
+           3D Car Drive Implementation
+           =========================== */
+
+        let carGameRunning = false;
+        let carScore = 0;
+        let carCanvas, carCtx;
+        let carIntv;
+
+        function initCarGame() {
+            carCanvas = document.getElementById('carCanvas');
+            carCtx = carCanvas.getContext('2d');
+
+            // Set canvas size
+            const container = document.getElementById('carGameContainer');
+            carCanvas.width = container.clientWidth;
+            carCanvas.height = container.clientHeight;
+
+            // Set city image size
+            document.getElementById('city').style.height = container.clientHeight * 0.3 + 'px';
+
+            // Initialize game state
+            carScore = 0;
+            document.getElementById('carScore').textContent = carScore;
+
+            // Start the game loop
+            if (carIntv) clearInterval(carIntv);
+            carIntv = setInterval(updateCarGame, 10);
+            carGameRunning = true;
+        }
+
+        function updateCarGame() {
+            if (!carGameRunning) return;
+
+            // Simplified game update - in a real implementation, this would be more complex
+            carCtx.clearRect(0, 0, carCanvas.width, carCanvas.height);
+
+            // Draw road
+            carCtx.fillStyle = '#555';
+            carCtx.beginPath();
+            carCtx.moveTo(carCanvas.width / 2 - 50, 0);
+            carCtx.lineTo(carCanvas.width / 2 + 50, 0);
+            carCtx.lineTo(carCanvas.width, carCanvas.height);
+            carCtx.lineTo(0, carCanvas.height);
+            carCtx.closePath();
+            carCtx.fill();
+
+            // Draw player car
+            carCtx.fillStyle = '#00c9ff';
+            carCtx.fillRect(carCanvas.width / 2 - 25, carCanvas.height - 100, 50, 80);
+
+            // Update score occasionally for demo
+            if (Math.random() < 0.01) {
+                carScore++;
+                document.getElementById('carScore').textContent = carScore;
+            }
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+
+            if (mode === 'guardian') {
+                threeContainer.style.display = 'block';
+                carGameContainer.style.display = 'none';
+                carGameRunning = false;
+                if (carIntv) clearInterval(carIntv);
+                mainStatus.textContent = 'AI Guardian Mode';
+                aiVoiceMessage("Switched to AI Guardian simulation");
+            } else if (mode === '3d') {
+                threeContainer.style.display = 'none';
+                carGameContainer.style.display = 'block';
+                initCarGame();
+                mainStatus.textContent = '3D Car Drive Mode';
+                aiVoiceMessage("Switched to 3D Car Drive simulation");
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('aiDensity').addEventListener('input', (e) => {
+                const v = parseInt(e.target.value, 10);
+                document.getElementById('aiDensityVal').textContent = v;
+                spawnAICars(v);
+            });
+
+            document.getElementById('startBtn').addEventListener('click', () => {
+                if (!isRunning) {
+                    isRunning = true;
+                    isPaused = false;
+                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                    mainStatus.textContent = currentMode === 'guardian' ? 'AI Guardian Active' : '3D Car Drive Active';
+                    log('Simulation started - ' + (currentMode === 'guardian' ? 'AI Guardian' : '3D Car Drive') + ' system online');
+                    aiVoiceMessage((currentMode === 'guardian' ? "AI Guardian" : "3D Car Drive") + " system activated.");
+                }
+            });
+
+            document.getElementById('pauseBtn').addEventListener('click', () => {
+                isPaused = !isPaused;
+                document.getElementById('pauseBtn').textContent = isPaused ? 'Resume' : 'Pause';
+                mainStatus.textContent = isPaused ? 'System Paused' : (currentMode === 'guardian' ? 'AI Guardian Active' : '3D Car Drive Active');
+            });
+
+            document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+            document.getElementById('emergencyBtn').addEventListener('click', () => {
+                if (currentMode === 'guardian') {
+                    // Create emergency scenario
+                    const ai = aiCars[Math.floor(Math.random() * aiCars.length)];
+                    if (ai) {
+                        ai.mesh.position.z = player.position.z - 15; // Safer distance
+                        ai.mesh.position.x = player.position.x;
+                        ai.mesh.userData.speed = Math.max(0.05, player.userData.speed * 0.7);
+                        log('Emergency test scenario injected!');
+                        aiVoiceMessage("Emergency test: Obstacle detected!", "caution");
+                        beep(300, 0.18, 'square');
+                    }
+                }
+            });
+
+            document.getElementById('camFollowBtn').addEventListener('click', () => {
+                followCamera = true;
+                orbitControls.enabled = false;
+                log('Camera: Follow mode');
+            });
+
+            document.getElementById('camOrbitBtn').addEventListener('click', () => {
+                followCamera = false;
+                orbitControls.enabled = true;
+                log('Camera: Orbit mode');
+            });
+
+            document.getElementById('mode3DBtn').addEventListener('click', () => {
+                switchMode('3d');
+            });
+
+            document.getElementById('modeGuardianBtn').addEventListener('click', () => {
+                switchMode('guardian');
+            });
+
+            document.getElementById('qualitySelect').addEventListener('change', (e) => {
+                const q = e.target.value;
+                renderer.shadowMap.enabled = (q === 'high');
+                log('Graphics quality: ' + q);
+            });
+
+            // 3D Car Drive controls
+            document.getElementById('carLeftBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys['arrowleft'] = true;
+            });
+
+            document.getElementById('carLeftBtn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys['arrowleft'] = false;
+            });
+
+            document.getElementById('carRightBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys['arrowright'] = true;
+            });
+
+            document.getElementById('carRightBtn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys['arrowright'] = false;
+            });
+        }
+
+        function resetGame() {
+            if (currentMode === 'guardian') {
+                player.position.set(0, 0.5, 30);
+                player.userData.speed = 0;
+                player.userData.lane = 2;
+                player.userData.targetLane = 2;
+                player.userData.laneChanging = false;
+
+                spawnAICars(parseInt(document.getElementById('aiDensity').value, 10));
+
+                isRunning = false;
+                isPaused = false;
+                mainStatus.textContent = 'System Ready';
+
+                // Reset game state
+                gameState.safetyScore = 100;
+                gameState.activeV2VAlerts = 0;
+                gameState.harshManeuvers = 0;
+                gameState.collisionsPrevented = 0;
+
+                updateHUD(0, null, 'SAFE');
+                updateSafetyScore();
+                hudV2V.textContent = '0 Active';
+
+                log('System reset - Ready for new simulation');
+                aiVoiceMessage("System reset. All systems nominal.");
+            } else if (currentMode === '3d') {
+                carScore = 0;
+                document.getElementById('carScore').textContent = carScore;
+                initCarGame();
+                log('3D Car Drive reset');
+            }
+        }
+
+        function log(msg) {
+            const time = new Date();
+            const ts = time.getHours().toString().padStart(2, '0') + ':' +
+                time.getMinutes().toString().padStart(2, '0') + ':' +
+                time.getSeconds().toString().padStart(2, '0');
+            const line = `[${ts}] ${msg}`;
+            const el = document.createElement('div');
+            el.textContent = line;
+            miniLog.prepend(el);
+            while (miniLog.children.length > 120) miniLog.removeChild(miniLog.lastChild);
+        }
+
+        function onResize() {
+            const container = document.getElementById('threeContainer');
+            if (camera && container) {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+
+            if (carCanvas) {
+                const carContainer = document.getElementById('carGameContainer');
+                carCanvas.width = carContainer.clientWidth;
+                carCanvas.height = carContainer.clientHeight;
+                document.getElementById('city').style.height = carContainer.clientHeight * 0.3 + 'px';
+            }
+        }
+
+        // Initialize the application
+        function init() {
+            initGuardian();
+            initAudio();
+            setupEventListeners();
+            window.addEventListener('resize', onResize);
+
+            // Start with AI Guardian mode
+            switchMode('guardian');
+
+            log('SafeDrive AI Guardian System initialized');
+            aiVoiceMessage("Welcome to SafeDrive AI Guardian. System is ready.");
+        }
+
+        // Start the application
+        init();
+        animate();
+    </script>
+</body>
+</html>
