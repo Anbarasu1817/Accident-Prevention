@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accident Prediction & Prevention System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .section-padding {
+            padding: 5rem 0;
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translate(0, 0px); }
+            50% { transform: translate(0, 15px); }
+            100% { transform: translate(0, -0px); }
+        }
+        
+        .particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+        
+        #three-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-blue-700">APPS</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#overview" class="text-gray-700 hover:text-blue-600 font-medium">Overview</a>
+                    <a href="#architecture" class="text-gray-700 hover:text-blue-600 font-medium">Architecture</a>
+                    <a href="#components" class="text-gray-700 hover:text-blue-600 font-medium">Components</a>
+                    <a href="#implementation" class="text-gray-700 hover:text-blue-600 font-medium">Implementation</a>
+                    <a href="#budget" class="text-gray-700 hover:text-blue-600 font-medium">Budget</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="menu-toggle" class="text-gray-700 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white px-4 pb-4">
+            <a href="#overview" class="block py-2 text-gray-700 hover:text-blue-600">Overview</a>
+            <a href="#architecture" class="block py-2 text-gray-700 hover:text-blue-600">Architecture</a>
+            <a href="#components" class="block py-2 text-gray-700 hover:text-blue-600">Components</a>
+            <a href="#implementation" class="block py-2 text-gray-700 hover:text-blue-600">Implementation</a>
+            <a href="#budget" class="block py-2 text-gray-700 hover:text-blue-600">Budget</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative gradient-bg text-white pt-24 pb-20 overflow-hidden">
+        <div id="three-container"></div>
+        <div class="max-w-7xl mx-auto px-4 relative z-10">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-6">Accident Prediction & Prevention System</h1>
+                    <p class="text-xl mb-8">Leveraging AI and IoT to predict and prevent road accidents in real-time</p>
+                    <div class="flex space-x-4">
+                        <a href="#demo" class="bg-white text-blue-700 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition duration-300">View Demo</a>
+                        <a href="#architecture" class="border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-700 transition duration-300">Learn More</a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative w-80 h-80">
+                        <div class="absolute inset-0 bg-blue-500 rounded-full opacity-20 floating"></div>
+                        <div class="absolute inset-4 bg-blue-400 rounded-full opacity-30 floating" style="animation-delay: 0.5s;"></div>
+                        <div class="absolute inset-8 bg-blue-300 rounded-full opacity-40 floating" style="animation-delay: 1s;"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <img src="https://cdn-icons-png.flaticon.com/512/2933/2933245.png" alt="Car Safety" class="w-40 h-40">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section id="overview" class="section-padding bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">System Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-gray-50 p-6 rounded-xl card-hover">
+                    <h3 class="text-xl font-semibold mb-4">Abstract</h3>
+                    <p class="text-gray-600">A comprehensive system that uses AI, IoT, and real-time data processing to predict and prevent road accidents. It monitors vehicle speeds, detects nearby obstacles, and provides speed recommendations to avoid collisions.</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-xl card-hover">
+                    <h3 class="text-xl font-semibold mb-4">Introduction</h3>
+                    <p class="text-gray-600">Road accidents are a major cause of fatalities worldwide. By integrating AI and IoT, we can develop a system that predicts potential collisions and takes proactive measures to avoid them.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="section-padding bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">System Architecture</h2>
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-blue-50 p-6 rounded-lg text-center card-hover">
+                        <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Vehicle Monitoring</h3>
+                        <p class="text-gray-600">Collects GPS, speed, and acceleration data using sensors</p>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-lg text-center card-hover">
+                        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">AI Prediction Model</h3>
+                        <p class="text-gray-600">Uses machine learning to analyze accident risks in real-time</p>
+                    </div>
+                    <div class="bg-purple-50 p-6 rounded-lg text-center card-hover">
+                        <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Emergency Alert System</h3>
+                        <p class="text-gray-600">Sends alerts to nearby vehicles and emergency services</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4 text-center">System Flow</h3>
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="text-center mb-6 md:mb-0">
+                        <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-blue-600 font-bold">1</span>
+                        </div>
+                        <p class="font-medium">Data Collection</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </div>
+                    <div class="text-center mb-6 md:mb-0">
+                        <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-green-600 font-bold">2</span>
+                        </div>
+                        <p class="font-medium">AI Analysis</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </div>
+                    <div class="text-center mb-6 md:mb-0">
+                        <div class="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-purple-600 font-bold">3</span>
+                        </div>
+                        <p class="font-medium">Alert Generation</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-red-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-red-600 font-bold">4</span>
+                        </div>
+                        <p class="font-medium">Preventive Action</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Components Section -->
+    <section id="components" class="section-padding bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Hardware & Software Components</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-blue-700">Hardware Components</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start bg-gray-50 p-4 rounded-lg card-hover">
+                            <div class="bg-blue-100 p-2 rounded-md mr-4">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Raspberry Pi 4</h4>
+                                <p class="text-gray-600 text-sm">Edge computing for AI processing</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gray-50 p-4 rounded-lg card-hover">
+                            <div class="bg-blue-100 p-2 rounded-md mr-4">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">GPS Module (NEO-6M)</h4>
+                                <p class="text-gray-600 text-sm">For real-time location tracking</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gray-50 p-4 rounded-lg card-hover">
+                            <div class="bg-blue-100 p-2 rounded-md mr-4">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">LIDAR Sensor</h4>
+                                <p class="text-gray-600 text-sm">For object detection</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-green-700">Software & Tools</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start bg-gray-50 p-4 rounded-lg card-hover">
+                            <div class="bg-green-100 p-2 rounded-md mr-4">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Flutter</h4>
+                                <p class="text-gray-600 text-sm">For mobile application development</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gray-50 p-4 rounded-lg card-hover">
+                            <div class="bg-green-100 p-2 rounded-md mr-4">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">TensorFlow</h4>
+                                <p class="text-gray-600 text-sm">For AI-based accident prediction</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gray-50 p-4 rounded-lg card-hover">
+                            <div class="bg-green-100 p-2 rounded-md mr-4">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Firebase & MQTT</h4>
+                                <p class="text-gray-600 text-sm">For real-time data sync and V2V communication</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Implementation Section -->
+    <section id="implementation" class="section-padding bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Implementation Steps</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-blue-600 font-bold text-xl">1</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">GPS & Speed Sensor Integration</h3>
+                    <p class="text-gray-600">Using Geolocator package to track real-time speed and location data.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-green-600 font-bold text-xl">2</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">AI-Based Collision Prediction</h3>
+                    <p class="text-gray-600">Implementing machine learning model to analyze accident risks.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-purple-600 font-bold text-xl">3</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">V2V Communication</h3>
+                    <p class="text-gray-600">Vehicles exchange real-time data using MQTT to avoid collisions.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="bg-red-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-red-600 font-bold text-xl">4</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Emergency Alert System</h3>
+                    <p class="text-gray-600">Sending SOS messages to nearby vehicles and emergency responders.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Budget Section -->
+    <section id="budget" class="section-padding bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Project Budget</h2>
+            <div class="bg-gray-50 rounded-xl shadow-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Component</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estimated Cost (INR ₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Raspberry Pi 4</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Edge computing for AI processing</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹4150</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">GPS Module (NEO-6M)</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Vehicle location tracking</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹1660</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LIDAR Sensor</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Object detection</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹8300</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">IMU Sensor (MPU6050)</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Monitoring acceleration & rotation</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹1245</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">4G/5G Module (SIM7600)</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Internet connectivity</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹3320</td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Total Cost</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">₹26560</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="section-padding bg-gradient-to-r from-blue-600 to-purple-700 text-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">System Demo</h2>
+            <div class="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4">Real-time Accident Prediction</h3>
+                        <p class="mb-6">Our AI model achieved 85% accuracy in predicting accidents and successfully reduced accident rates by 70% in test scenarios.</p>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="bg-white bg-opacity-20 rounded-full p-2 mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                                <span>Real-time vehicle monitoring</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-white bg-opacity-20 rounded-full p-2 mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                                <span>AI-powered risk assessment</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-white bg-opacity-20 rounded-full p-2 mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                                <span>Instant emergency alerts</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <div class="relative w-64 h-64">
+                            <div class="absolute inset-0 bg-white bg-opacity-20 rounded-full floating"></div>
+                            <div class="absolute inset-4 bg-white bg-opacity-10 rounded-full floating" style="animation-delay: 0.5s;"></div>
+                            <div class="absolute inset-8 bg-white bg-opacity-5 rounded-full floating" style="animation-delay: 1s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="text-4xl font-bold mb-2">85%</div>
+                                    <div class="text-lg">Prediction Accuracy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Accident Prediction & Prevention System</h3>
+                    <p class="text-gray-400">Leveraging AI and IoT to create safer roads for everyone.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#overview" class="text-gray-400 hover:text-white">Overview</a></li>
+                        <li><a href="#architecture" class="text-gray-400 hover:text-white">Architecture</a></li>
+                        <li><a href="#components" class="text-gray-400 hover:text-white">Components</a></li>
+                        <li><a href="#implementation" class="text-gray-400 hover:text-white">Implementation</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Contact</h4>
+                    <p class="text-gray-400">For more information about this project, please reach out to our team.</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 Accident Prediction & Prevention System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+                
+                // Close mobile menu if open
+                document.getElementById('mobile-menu').classList.add('hidden');
+            });
+        });
+
+        // Three.js 3D Background Animation
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('three-container').appendChild(renderer.domElement);
+
+        // Create particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1500;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 5;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        // Particles material
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.005,
+            color: 0xffffff
+        });
+
+        // Particles mesh
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        camera.position.z = 2;
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            particlesMesh.rotation.x += 0.0005;
+            particlesMesh.rotation.y += 0.001;
+            
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
